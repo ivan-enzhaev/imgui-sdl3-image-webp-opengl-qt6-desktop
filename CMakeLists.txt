@@ -49,7 +49,6 @@ find_package(SDL3_image REQUIRED CONFIG)
 
 # -----------------------------------------------------------------------------
 # Fix Ninja issue: Clear bogus relative link paths from SDL3_image static target
-# (We already link all webp, opengl, and SDL3 libraries explicitly below)
 # -----------------------------------------------------------------------------
 if(TARGET SDL3_image::SDL3_image-static)
     set_target_properties(SDL3_image::SDL3_image-static PROPERTIES INTERFACE_LINK_LIBRARIES "")
@@ -68,7 +67,7 @@ set(IMGUI_SOURCES
 )
 
 # -----------------------------------------------------------------------------
-# Executable Target (Changed to qt_add_executable for static plugin support)
+# Executable Target (qt_add_executable for static plugin support)
 # -----------------------------------------------------------------------------
 qt_add_executable(app
     src/main.cpp
@@ -104,9 +103,13 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 endif()
 
 # -----------------------------------------------------------------------------
-# Link Flags & Libraries
+# Link Flags & Stripping (Applied to BOTH Windows & Ubuntu)
 # -----------------------------------------------------------------------------
-target_link_options(app PRIVATE -static-libgcc -static-libstdc++)
+target_link_options(app PRIVATE 
+    -static-libgcc 
+    -static-libstdc++
+    $<$<CONFIG:Release>:-s>
+)
 
 if(WIN32)
     target_link_libraries(app PRIVATE
@@ -121,6 +124,7 @@ if(WIN32)
         C:/libs/webp-1.6.0-mingw/lib/libsharpyuv.a
     )
 
+    # Full static linking and subsystem selection only on Windows
     target_link_options(app PRIVATE -static)
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
